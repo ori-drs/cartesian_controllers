@@ -93,16 +93,6 @@ init(HardwareInterface* hw, ros::NodeHandle& nh)
   KDL::Tree   robot_tree;
 
   // Get controller specific configuration
-  if (!ros::param::search("robot_description", robot_description))
-  {
-    ROS_ERROR_STREAM("Searched enclosing namespaces for robot_description but nothing found");
-    return false;
-  }
-  if (!nh.getParam(robot_description, robot_description))
-  {
-    ROS_ERROR_STREAM("Failed to load " << robot_description << " from parameter server");
-    return false;
-  }
   if (!nh.getParam("robot_base_link",m_robot_base_link))
   {
     ROS_ERROR_STREAM("Failed to load " << nh.getNamespace() + "/robot_base_link" << " from parameter server");
@@ -115,7 +105,7 @@ init(HardwareInterface* hw, ros::NodeHandle& nh)
   }
 
   // Build a kinematic chain of the robot
-  if (!robot_model.initString(robot_description))
+  if (!robot_model.initParamWithNodeHandle("robot_description", nh))
   {
     ROS_ERROR("Failed to parse urdf model from 'robot_description'");
     return false;
