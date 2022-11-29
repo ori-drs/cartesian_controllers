@@ -90,11 +90,6 @@ bool JointToCartesianController::init(hardware_interface::JointStateInterface* h
   KDL::Tree   robot_tree;
 
   // Get controller specific configuration
-  if (!nh.getParam("/robot_description",robot_description))
-  {
-    ROS_ERROR("Failed to load '/robot_description' from parameter server");
-    return false;
-  }
   if (!nh.getParam("robot_base_link",m_robot_base_link))
   {
     ROS_ERROR_STREAM("Failed to load " << nh.getNamespace() + "/robot_base_link" << " from parameter server");
@@ -118,8 +113,10 @@ bool JointToCartesianController::init(hardware_interface::JointStateInterface* h
   // Publishers
   m_pose_publisher = nh.advertise<geometry_msgs::PoseStamped>(m_target_frame_topic,10);
 
+  ROS_INFO_STREAM("[JointToCartesianController] robot_base_link = " << m_robot_base_link << ", end_effector_link = " << m_end_effector_link << ", target_frame_topic = " << m_target_frame_topic);
+
   // Build a kinematic chain of the robot
-  if (!robot_model.initString(robot_description))
+  if (!robot_model.initParamWithNodeHandle("robot_description", nh))
   {
     ROS_ERROR("Failed to parse urdf model from 'robot_description'");
     return false;
