@@ -21,7 +21,7 @@ roslaunch cartesian_controller_examples examples.launch
 Select */controller_manager* as namespace and activate *my_cartesian_motion_controller*. Also activate
 *my_motion_control_handle*.
 
-3) Switch to the RViz window and tick the box *Interactive Markers*. Use the interactive marker to guide the end effector of the robot. The robot should follow slowely.
+3) Switch to the RViz window and tick the box *Interactive Markers*. Use the interactive marker to guide the end effector of the robot. The robot should follow slowly.
 
 4) In rqt open the *Dynamic Reconfigure* plugin under *Configuration*. Play a
 little with the parameters of *my_cartesian_motion_controller* (e.g. solver/error_scale) and observe the
