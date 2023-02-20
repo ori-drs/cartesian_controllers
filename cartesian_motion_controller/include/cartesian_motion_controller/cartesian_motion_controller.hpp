@@ -52,7 +52,7 @@ namespace cartesian_motion_controller
 template <class HardwareInterface>
 CartesianMotionController<HardwareInterface>::
 CartesianMotionController()
-: Base::CartesianControllerBase()
+: Base::CartesianControllerBase(), listener_(buffer_)
 {
 }
 
@@ -183,15 +183,43 @@ template <class HardwareInterface>
 void CartesianMotionController<HardwareInterface>::
 targetFrameCallback(const geometry_msgs::PoseStamped& target)
 {
+  KDL::Frame target_frame_T_robot_base_link = KDL::Frame::Identity();
+
   if (target.header.frame_id != Base::m_robot_base_link)
   {
-    ROS_WARN_STREAM_THROTTLE(3, "Got target pose in wrong reference frame. Expected: "
-        << Base::m_robot_base_link << " but got "
-        << target.header.frame_id);
-    return;
+    // Support for floating-base systems: If a transform exists between the
+    // target's frame_id and the robot_base_link, we will use this looked-up
+    // transform, treated as a constant transform for this control step, to
+    // define the target frame_id by multiplying the target with the inverse
+    // of the looked-up frame thereby allowing control in the robot_base_link
+    // reference frame
+
+    // Look up transform; if not found, warn & return
+    try {
+      geometry_msgs::TransformStamped transform =
+          buffer_.lookupTransform(Base::m_robot_base_link, target.header.frame_id,
+                                  target.header.stamp, ros::Duration(0.005));  // TODO: hard-coded dt to 5ms
+      ROS_INFO_STREAM_THROTTLE(3, "Retrieved transform from [" << target.header.frame_id << "] to [" << Base::m_robot_base_link << "]: [" << transform.transform.translation.x << ", " << transform.transform.translation.y << ", " << transform.transform.translation.z << "], [" << transform.transform.rotation.x << ", " << transform.transform.rotation.y << ", " << transform.transform.rotation.z << ", " << transform.transform.rotation.w << "]");
+
+      target_frame_T_robot_base_link = KDL::Frame(
+        KDL::Rotation::Quaternion(
+          transform.transform.rotation.x,
+          transform.transform.rotation.y,
+          transform.transform.rotation.z,
+          transform.transform.rotation.w),
+        KDL::Vector(
+          transform.transform.translation.x,
+          transform.transform.translation.y,
+          transform.transform.translation.z));
+    } catch (const tf2::TransformException &ex) {
+      ROS_WARN_STREAM_THROTTLE(3, "Got target pose in wrong reference frame. Expected: "
+          << Base::m_robot_base_link << " but got "
+          << target.header.frame_id << ". Tried looking up frame but failed: " << ex.what());
+      return;
+    }
   }
 
-  m_target_frame = KDL::Frame(
+  m_target_frame = target_frame_T_robot_base_link * KDL::Frame(
       KDL::Rotation::Quaternion(
         target.pose.orientation.x,
         target.pose.orientation.y,

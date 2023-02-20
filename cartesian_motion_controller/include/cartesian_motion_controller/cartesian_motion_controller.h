@@ -46,6 +46,9 @@
 // ROS
 #include <kdl/frames.hpp>
 #include <geometry_msgs/PoseStamped.h>
+#include <geometry_msgs/TransformStamped.h>
+#include <tf2_ros/buffer.h>
+#include <tf2_ros/transform_listener.h>
 
 namespace cartesian_motion_controller
 {
@@ -112,6 +115,9 @@ class CartesianMotionController : public virtual cartesian_controller_base::Cart
 
     ros::Subscriber m_target_frame_subscr;
     std::string     m_target_frame_topic;
+
+    tf2_ros::Buffer buffer_;
+    tf2_ros::TransformListener listener_;
 };
 
 }

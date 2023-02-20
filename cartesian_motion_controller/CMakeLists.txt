@@ -15,6 +15,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   cartesian_controller_base
   geometry_msgs
+  tf2_ros
 )
 
 ###################################
@@ -32,6 +33,7 @@ catkin_package(
   CATKIN_DEPENDS
     roscpp
     geometry_msgs
+    tf2_ros
 #  DEPENDS system_lib
 )
 
